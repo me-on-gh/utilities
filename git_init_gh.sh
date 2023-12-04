@@ -11,6 +11,26 @@ github_repo_url="git@github.com:${git_username}/${directory_name}.git"
 # GitHub token label in the keychain
 github_token_label="GitHub Token"
 
+# Prompt the user for the repository visibility (private or public)
+echo "Select repository visibility:"
+echo "1. Private"
+echo "2. Public"
+read -p "Enter the number corresponding to your choice: " visibility_choice
+
+# Interpret the user's choice
+case $visibility_choice in
+    1)
+        private=true
+        ;;
+    2)
+        private=false
+        ;;
+    *)
+        echo "Invalid choice. Exiting."
+        exit 1
+        ;;
+esac
+
 # Attempt to get the GitHub token from the keychain
 githubToken=$(security find-generic-password -a "${git_username}" -s "${github_token_label}" -w 2>/dev/null)
 
@@ -33,7 +53,7 @@ if [ -d ".git" ]; then
         # Check if the remote 'origin' already exists
         if ! git remote | grep -q "origin"; then
             # Attempt to create the remote repository on GitHub
-            response=$(curl -u "${git_username}:${githubToken}" https://api.github.com/user/repos -d "{\"name\":\"${directory_name}\",\"private\":false}")
+            response=$(curl -u "${git_username}:${githubToken}" https://api.github.com/user/repos -d "{\"name\":\"${directory_name}\",\"private\":${private}}")
             echo "GitHub API Response: ${response}"
 
             # Add the remote
@@ -64,7 +84,7 @@ else
     fi
 
     # Attempt to create the remote repository on GitHub
-    response=$(curl -u "${git_username}:${githubToken}" https://api.github.com/user/repos -d "{\"name\":\"${directory_name}\",\"private\":false}")
+    response=$(curl -u "${git_username}:${githubToken}" https://api.github.com/user/repos -d "{\"name\":\"${directory_name}\",\"private\":${private}}")
     echo "GitHub API Response: ${response}"
 
     # Add the remote

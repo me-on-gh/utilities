@@ -12,7 +12,10 @@ github_repo_url="git@github.com:${git_username}/${directory_name}.git"
 github_token_label="GitHub Token"
 
 # Attempt to get the GitHub token from the keychain
-githubToken=$(security find-internet-password -a "${git_username}" -s "${github_token_label}" -w 2>/dev/null)
+githubToken=$(security find-generic-password -a "${git_username}" -s "${github_token_label}" -w 2>/dev/null)
+
+# Print the GitHub token to debug
+echo "GitHub Token from Keychain: ${githubToken}"
 
 # If the GitHub token does not exist in the keychain, prompt the user to enter it
 if [ -z "${githubToken}" ]; then
@@ -37,6 +40,13 @@ if [ -d ".git" ]; then
             git remote add origin "${github_repo_url}"
         fi
 
+        # Create an initial commit if there are no commits
+        if [ -z "$(git log --oneline)" ]; then
+            echo "Initial commit" > README.md
+            git add README.md
+            git commit -m "Initial commit"
+        fi
+
         # Perform the push, considering the default branch name
         git push -u origin HEAD:main
     else
@@ -48,12 +58,22 @@ else
     git config user.name "${git_username}"
     git config user.email "${git_email}"
 
+    # Save the GitHub token to the keychain if it wasn't retrieved earlier
+    if [ -z "${githubToken}" ]; then
+        security add-generic-password -a "${git_username}" -s "${github_token_label}" -w "${githubToken}" -U
+    fi
+
     # Attempt to create the remote repository on GitHub
     response=$(curl -u "${git_username}:${githubToken}" https://api.github.com/user/repos -d "{\"name\":\"${directory_name}\",\"private\":false}")
     echo "GitHub API Response: ${response}"
 
     # Add the remote
     git remote add origin "${github_repo_url}"
+
+    # Create an initial commit
+    echo "Initial commit" > README.md
+    git add README.md
+    git commit -m "Initial commit"
 
     # Perform the push, considering the default branch name
     git push -u origin HEAD:main

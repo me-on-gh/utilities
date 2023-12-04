@@ -21,8 +21,8 @@ if [ -d ".git" ]; then
         git add . 2>/dev/null || true
         git commit -m "Initial commit" 2>/dev/null || true
 
-        # Perform the push
-        git push -u origin master
+        # Perform the push, considering the default branch name
+        git push -u origin HEAD:main
     else
         echo "Not a valid Git repository."
     fi
@@ -37,6 +37,6 @@ else
     git add . 2>/dev/null || true
     git commit -m "Initial commit" 2>/dev/null || true
 
-    # Perform the push
-    git push -u origin master
+    # Perform the push, considering the default branch name
+    git push -u origin HEAD:main
 fi
